@@ -5,7 +5,6 @@ OpenAI Apps SDK / MCP 用の簡易サーバーです。`show_cat_gallery` ツー
 ## セットアップ
 
 ```bash
-cd prototype/mcp-server
 npm install
 ```
 
@@ -21,7 +20,7 @@ export CAT_API_KEY=your_key_here
 
 ```bash
 # フロントウィジェット資産を書き出していない場合は先に実行
-npm --prefix ../prototype run build:widget
+npm --prefix ../widget-dev run build:widget
 
 npm run dev
 ```
@@ -68,10 +67,10 @@ ChatGPT の Developers モードでローカル MCP サーバーを登録する�
   - 引数: `limit` (1〜12, 省略時 8)
   - レスポンス: 猫ギャラリーのテキスト要約と `photos` 配列 (`id`, `url`, `alt`, `breedName` など)
 
-Apps SDK 向けの outputTemplate として `ui://widget/cat-gallery.html` を返します。`prototype` 側で `npm run build:widget` を実行すると生成される React カルーセル資産が読み込まれ、`structuredContent.photos` を props として受け取ります。
+Apps SDK 向けの outputTemplate として `ui://widget/cat-gallery.html` を返します。`widget-dev` 側で `npm run build:widget` を実行すると生成される React カルーセル資産が読み込まれ、`structuredContent.photos` を props として受け取ります。
 
 ## 今後の拡張
 
-- Apps SDK の outputTemplate を追加し、`prototype/src` のカルーセル ウィジェットを組み込む。
+- Apps SDK の outputTemplate を追加し、`widget-dev/src` のカルーセル ウィジェットを組み込む。
 - 取得した猫データのキャッシュやフィルタリング、ユーザー指定のムードに応じたソートなど。
 - ログ基盤を接続し、猫の呼び出し頻度やユーザー反応を分析する。

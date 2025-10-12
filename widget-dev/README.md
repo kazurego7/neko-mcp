@@ -10,7 +10,6 @@ React + Vite を使ったシンプルなセットアップで、ここから MCP
 
 ## セットアップ
 ```bash
-cd prototype
 npm install
 ```
 
@@ -31,7 +30,7 @@ Cat ギャラリーのウィジェット資産を MCP サーバー側へ書き�
 ```bash
 npm run build:widget
 ```
-`prototype/mcp-server/public/` に HTML/JS/CSS が生成され、MCP サーバーの `ReadResource` から提供できます。
+`mcp-server/public/` に HTML/JS/CSS が生成され、MCP サーバーの `ReadResource` から提供できます。
 
 ## CatAPI を利用した猫ギャラリー
 `猫ギャラリーを表示` ボタンで [The Cat API](https://thecatapi.com/) から画像を取得し、ChatGPT の Apps SDK で利用できるインラインカルーセル形式の UI を描画します。品種名・性格・出典リンク (Wikipedia) などの付加情報をカードに簡潔にまとめており、カルーセル末尾までスクロールすると追加の猫画像を自動で取得します。
