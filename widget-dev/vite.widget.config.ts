@@ -5,7 +5,7 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: "mcp-server/public",
+    outDir: "../mcp-server/public",
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
