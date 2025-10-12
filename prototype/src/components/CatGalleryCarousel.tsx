@@ -10,11 +10,13 @@ import type { CatPhoto } from "../api/catApi";
 
 type Props = {
   photos: CatPhoto[];
-  isLoading: boolean;
-  isLoadingMore: boolean;
+  isLoading?: boolean;
+  isLoadingMore?: boolean;
   error?: string | null;
-  onRetry: () => void;
-  onCollapse: () => void;
+  heading?: string;
+  description?: string;
+  onRetry?: () => void;
+  onCollapse?: () => void;
   onLoadMore?: () => void;
   freshPhotoIds?: string[];
 };
@@ -24,9 +26,11 @@ const PRELOAD_OFFSET = 280;
 
 export function CatGalleryCarousel({
   photos,
-  isLoading,
-  isLoadingMore,
+  isLoading = false,
+  isLoadingMore = false,
   error,
+  heading = "ひと休みギャラリー",
+  description = "The Cat API から取得した写真を横スクロールで表示します。気になった猫は Wikipedia で詳細もチェックできます。",
   onRetry,
   onCollapse,
   onLoadMore,
@@ -171,19 +175,18 @@ export function CatGalleryCarousel({
     >
       <header className="gallery-inline__header">
         <div>
-          <h2>ひと休みギャラリー</h2>
-          <p>
-            The Cat API から取得した写真を横スクロールで表示します。気になった猫は
-            Wikipedia で詳細もチェックできます。
-          </p>
+          <h2>{heading}</h2>
+          <p>{description}</p>
         </div>
-        <button
-          type="button"
-          className="ghost-button ghost-button--compact"
-          onClick={onCollapse}
-        >
-          非表示にする
-        </button>
+        {onCollapse && (
+          <button
+            type="button"
+            className="ghost-button ghost-button--compact"
+            onClick={onCollapse}
+          >
+            非表示にする
+          </button>
+        )}
       </header>
 
       {isLoading && (
@@ -196,27 +199,31 @@ export function CatGalleryCarousel({
       {!isLoading && error && !hasPhotos && (
         <div className="gallery-inline__state error" role="alert">
           <p>{error}</p>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={onRetry}
-            aria-label="猫画像の取得を再試行"
-          >
-            もう一度読み込む
-          </button>
+          {onRetry && (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={onRetry}
+              aria-label="猫画像の取得を再試行"
+            >
+              もう一度読み込む
+            </button>
+          )}
         </div>
       )}
 
       {!isLoading && error && hasPhotos && (
         <div className="gallery-inline__banner" role="status">
           <p>{error}</p>
-          <button
-            type="button"
-            className="ghost-button ghost-button--compact"
-            onClick={onRetry}
-          >
-            再読み込み
-          </button>
+          {onRetry && (
+            <button
+              type="button"
+              className="ghost-button ghost-button--compact"
+              onClick={onRetry}
+            >
+              再読み込み
+            </button>
+          )}
         </div>
       )}
 

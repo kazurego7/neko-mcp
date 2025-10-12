@@ -152,6 +152,8 @@ export default function App() {
           isLoading={isLoadingInitial}
           isLoadingMore={isLoadingMore}
           error={error}
+          heading="猫ギャラリー"
+          description="CatAPI から取得した猫の写真をインラインカルーセルで表示します。"
           onRetry={handleRetry}
           onCollapse={handleCollapse}
           onLoadMore={handleLoadMore}

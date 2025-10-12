@@ -26,6 +26,13 @@ npm run build
 ```
 `dist/` に本番ビルド成果物が生成されます。Apps SDK へ組み込む際は、この成果物を MCP サーバーなどから配信します。
 
+Cat ギャラリーのウィジェット資産を MCP サーバー側へ書き出す場合は以下を実行します。
+
+```bash
+npm run build:widget
+```
+`prototype/mcp-server/public/` に HTML/JS/CSS が生成され、MCP サーバーの `ReadResource` から提供できます。
+
 ## CatAPI を利用した猫ギャラリー
 `猫ギャラリーを表示` ボタンで [The Cat API](https://thecatapi.com/) から画像を取得し、ChatGPT の Apps SDK で利用できるインラインカルーセル形式の UI を描画します。品種名・性格・出典リンク (Wikipedia) などの付加情報をカードに簡潔にまとめており、カルーセル末尾までスクロールすると追加の猫画像を自動で取得します。
 
