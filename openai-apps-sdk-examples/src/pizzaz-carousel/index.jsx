@@ -2,11 +2,12 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import markers from "./markers.json";
-import PlaceCard from "./PlaceCard";
+import CatCard from "./CatCard";
 
 function App() {
-  const places = markers?.places || [];
+  const [cats, setCats] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: false,
@@ -18,8 +19,65 @@ function App() {
   const [canNext, setCanNext] = React.useState(false);
 
   React.useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCats() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          "https://api.thecatapi.com/v1/images/search?limit=12&has_breeds=1",
+          { signal: controller.signal, headers: { Accept: "application/json" } }
+        );
+
+        if (!response.ok) {
+          throw new Error(`CatAPIが ${response.status} で応答しました`);
+        }
+
+        const payload = await response.json();
+        const normalizedCats = payload
+          .map((entry) => {
+            const breed = entry?.breeds?.[0] ?? {};
+            return {
+              id: entry?.id ?? entry?.url,
+              name: breed?.name ?? "名前不明の猫",
+              origin: breed?.origin ?? "",
+              temperament: breed?.temperament ?? "",
+              description: breed?.description ?? "",
+              lifeSpan: breed?.life_span ?? "",
+              wikipediaUrl: breed?.wikipedia_url ?? "",
+              imageUrl: entry?.url ?? "",
+            };
+          })
+          .filter((cat) => cat.id && cat.imageUrl);
+
+        setCats(normalizedCats);
+      } catch (catError) {
+        if (controller.signal.aborted) return;
+        console.error(catError);
+        setError(
+          catError instanceof Error ? catError.message : "CatAPIの取得に失敗しました"
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadCats();
+
+    return () => controller.abort();
+  }, []);
+
+  React.useEffect(() => {
     if (!emblaApi) return;
     const updateButtons = () => {
+      if (emblaApi.slideNodes().length <= 1) {
+        setCanPrev(false);
+        setCanNext(false);
+        return;
+      }
       setCanPrev(emblaApi.canScrollPrev());
       setCanNext(emblaApi.canScrollNext());
     };
@@ -32,13 +90,27 @@ function App() {
     };
   }, [emblaApi]);
 
+  React.useEffect(() => {
+    if (emblaApi) {
+      emblaApi.reInit();
+    }
+  }, [emblaApi, cats.length]);
+
+  const hasSlides = cats.length > 0;
+
   return (
     <div className="antialiased relative w-full text-black py-5 bg-white">
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-4 max-sm:mx-5 items-stretch">
-          {places.map((place) => (
-            <PlaceCard key={place.id} place={place} />
-          ))}
+          {isLoading ? (
+            <div className="text-sm text-black/60 px-4 py-10">CatAPIから読み込み中…</div>
+          ) : error ? (
+            <div className="text-sm text-red-500 px-4 py-10">{error}</div>
+          ) : hasSlides ? (
+            cats.map((cat) => <CatCard key={cat.id} cat={cat} />)
+          ) : (
+            <div className="text-sm text-black/60 px-4 py-10">猫のデータが見つかりませんでした。</div>
+          )}
         </div>
       </div>
       {/* Edge gradients */}
