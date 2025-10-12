@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import CatGalleryCarousel from "../components/CatGalleryCarousel";
 import type { CatPhoto } from "../api/catApi";
 import { useWidgetProps } from "../use-widget-props";
@@ -16,14 +16,16 @@ export default function CatGalleryWidget() {
   const toolOutput = useWidgetProps<CatGalleryToolOutput>({ photos: [] });
   const photos = toolOutput?.photos ?? [];
   const requestDisplayMode = useOpenAiGlobal("requestDisplayMode");
+  const hasRequestedDisplayMode = useRef(false);
 
   useEffect(() => {
-    if (!requestDisplayMode) {
+    if (!requestDisplayMode || hasRequestedDisplayMode.current) {
       return;
     }
 
-    requestDisplayMode({ mode: "inline" }).catch(() => {
-      // ignore; host may reject the request
+    hasRequestedDisplayMode.current = true;
+    Promise.resolve(requestDisplayMode({ mode: "inline" })).catch(() => {
+      // ignore; host may reject the request or return void
     });
   }, [requestDisplayMode]);
 

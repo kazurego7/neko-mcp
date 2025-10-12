@@ -61,6 +61,7 @@ const catGalleryTool: Tool = {
   title: "Show cat gallery",
   description: "Fetch a curated list of cats from The Cat API to help the user take a break.",
   inputSchema: toolInputSchema,
+  annotations: { readOnlyHint: true },
   _meta: catWidgetMeta
 };
 
