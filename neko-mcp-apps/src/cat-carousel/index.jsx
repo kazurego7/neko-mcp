@@ -180,4 +180,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("pizzaz-carousel-root")).render(<App />);
+createRoot(document.getElementById("cat-carousel-root")).render(<App />);

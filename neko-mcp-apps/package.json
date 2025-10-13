@@ -1,7 +1,7 @@
 {
-  "name": "ecosystem_ui",
-  "version": "5.0.16",
-  "description": "",
+  "name": "neko-mcp-apps",
+  "version": "0.1.0",
+  "description": "Cat-themed MCP widget playground for the neko-mcp project.",
   "scripts": {
     "build": "tsx ./build-all.mts",
     "serve": "serve -s ./assets -p 4444 --cors",

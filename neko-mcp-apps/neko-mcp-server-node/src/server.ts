@@ -22,7 +22,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
-type PizzazWidget = {
+type CatWidget = {
   id: string;
   title: string;
   templateUri: string;
@@ -32,7 +32,7 @@ type PizzazWidget = {
   responseText: string;
 };
 
-function widgetMeta(widget: PizzazWidget) {
+function widgetMeta(widget: CatWidget) {
   return {
     "openai/outputTemplate": widget.templateUri,
     "openai/toolInvocation/invoking": widget.invoking,
@@ -49,26 +49,26 @@ function loadWidgetMarkup(name: string): string {
   if (!fs.existsSync(snippetPath)) {
     throw new Error(
       `Widget assets for "${name}" were not found at ${snippetPath}. ` +
-        `Run "pnpm build" inside the openai-apps-sdk-examples workspace to generate assets.`
+        `Run "pnpm build" inside the neko-mcp-apps workspace to generate assets.`
     );
   }
   return fs.readFileSync(snippetPath, "utf8").trim();
 }
 
-const widgets: PizzazWidget[] = [
+const widgets: CatWidget[] = [
   {
-    id: "pizza-carousel",
-    title: "Show Pizza Carousel",
-    templateUri: "ui://widget/pizza-carousel.html",
-    invoking: "Carousel some spots",
-    invoked: "Served a fresh carousel",
-    html: loadWidgetMarkup("pizzaz-carousel"),
-    responseText: "Rendered a pizza carousel!"
+    id: "cat-carousel",
+    title: "Show Cat Carousel",
+    templateUri: "ui://widget/cat-carousel.html",
+    invoking: "Summoning feline friends",
+    invoked: "Cat carousel is live",
+    html: loadWidgetMarkup("cat-carousel"),
+    responseText: "Rendered a cat carousel!"
   }
 ];
 
-const widgetsById = new Map<string, PizzazWidget>();
-const widgetsByUri = new Map<string, PizzazWidget>();
+const widgetsById = new Map<string, CatWidget>();
+const widgetsByUri = new Map<string, CatWidget>();
 
 widgets.forEach((widget) => {
   widgetsById.set(widget.id, widget);
@@ -78,17 +78,17 @@ widgets.forEach((widget) => {
 const toolInputSchema = {
   type: "object",
   properties: {
-    pizzaTopping: {
+    catKeyword: {
       type: "string",
-      description: "Topping to mention when rendering the widget."
+      description: "Keyword or short note about the cats to include in the completion."
     }
   },
-  required: ["pizzaTopping"],
+  required: ["catKeyword"],
   additionalProperties: false
 } as const;
 
 const toolInputParser = z.object({
-  pizzaTopping: z.string()
+  catKeyword: z.string()
 });
 
 const tools: Tool[] = widgets.map((widget) => ({
@@ -115,10 +115,10 @@ const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
   _meta: widgetMeta(widget)
 }));
 
-function createPizzazServer(): Server {
+function createNekoServer(): Server {
   const server = new Server(
     {
-      name: "pizzaz-node",
+      name: "neko-mcp-node",
       version: "0.1.0"
     },
     {
@@ -177,7 +177,7 @@ function createPizzazServer(): Server {
         }
       ],
       structuredContent: {
-        pizzaTopping: args.pizzaTopping
+        catKeyword: args.catKeyword
       },
       _meta: widgetMeta(widget)
     };
@@ -198,7 +198,7 @@ const postPath = "/mcp/messages";
 
 async function handleSseRequest(res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const server = createPizzazServer();
+  const server = createNekoServer();
   const transport = new SSEServerTransport(postPath, res);
   const sessionId = transport.sessionId;
 
@@ -295,7 +295,7 @@ httpServer.on("clientError", (err: Error, socket) => {
 });
 
 httpServer.listen(port, () => {
-  console.log(`Pizzaz MCP server listening on http://localhost:${port}`);
+  console.log(`Neko MCP server listening on http://localhost:${port}`);
   console.log(`  SSE stream: GET http://localhost:${port}${ssePath}`);
   console.log(`  Message post endpoint: POST http://localhost:${port}${postPath}?sessionId=...`);
 });

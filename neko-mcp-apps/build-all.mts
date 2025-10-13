@@ -6,7 +6,7 @@ import fs from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 
 const ENTRY_GLOB = "src/**/index.{tsx,jsx}";
-const TARGET_ENTRIES = new Set(["pizzaz-carousel"]);
+const TARGET_ENTRIES = new Set(["cat-carousel"]);
 const OUT_DIR = "assets";
 
 const PER_ENTRY_CSS_GLOB = "**/*.{css,pcss,scss,sass}";
