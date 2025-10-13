@@ -51,7 +51,7 @@ function loadWidgetMarkup(name: string): string {
   if (!fs.existsSync(snippetPath)) {
     throw new Error(
       `"${name}" のウィジェットアセットが ${snippetPath} に見つかりませんでした。` +
-        `neko-mcp-apps ワークスペースで "pnpm build" を実行して生成してください。`
+        `neko-widget-dev ワークスペースで "pnpm build" を実行して生成してください。`
     );
   }
   return fs.readFileSync(snippetPath, "utf8").trim();
