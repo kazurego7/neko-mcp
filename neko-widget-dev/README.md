@@ -1,12 +1,12 @@
 # Neko Widget Dev
 
-`neko-widget-dev` は、猫の情報を表示するウィジェットと対応する Node MCP サーバーをまとめた小さなワークスペースです。Apps SDK の最小構成を猫テーマで試せるよう、CatAPI から取得したデータをカルーセルで表示します。
+`neko-widget-dev` は、猫の情報を表示するウィジェット開発用のワークスペースです。Apps SDK の最小構成を猫テーマで試せるよう、CatAPI から取得したデータをカルーセルで表示します。MCP サーバーはリポジトリルートの `neko-mcp-server/` に配置されています。
 
 ## リポジトリ構成
 
 - `src/cat-carousel/` – React ウィジェット本体。CatAPI からデータを取得してカルーセルを描画します。
 - `assets/` – `pnpm run build` を実行すると生成されるバンドルと HTML スニペット。
-- `neko-mcp-server/` – MCP サーバー。ウィジェットのスニペットをツールとして公開します。
+- `../neko-mcp-server/` – MCP サーバー。ウィジェットのスニペットをツールとして公開します。
 - `build-all.mts` – ウィジェットをバンドルしてインライン HTML を出力するユーティリティスクリプト。
 
 ## 前提条件
@@ -49,7 +49,7 @@ Vite は `http://localhost:4444/cat-carousel.html` を配信します。
 
 ## MCP サーバーの実行
 
-サーバーディレクトリで次のコマンドを実行します。
+リポジトリルートで以下を実行します。
 
 ```bash
 cd neko-mcp-server

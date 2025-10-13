@@ -1,0 +1,26 @@
+# Dependency directories
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Logs and caches
+*.log
+pnpm-debug.log
+npm-debug.log
+yarn-error.log
+.eslintcache
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/

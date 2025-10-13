@@ -44,7 +44,7 @@ function widgetMeta(widget: CatWidget) {
   } as const;
 }
 
-const ASSETS_DIR = path.resolve(fileURLToPath(new URL("../../assets", import.meta.url)));
+const ASSETS_DIR = path.resolve(fileURLToPath(new URL("../../neko-widget-dev/assets", import.meta.url)));
 
 function loadWidgetMarkup(name: string): string {
   const snippetPath = path.join(ASSETS_DIR, `${name}.snippet.html`);

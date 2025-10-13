@@ -1,6 +1,6 @@
 # Neko Carousel MCP サーバー（Node）
 
-このサーバーは公式 Model Context Protocol (MCP) TypeScript SDK を利用して `cat-carousel` ツールをまとめています。リポジトリ直下の `build-all.mts` スクリプトで生成されたインライン HTML スニペットを読み込み、Apps SDK がアシスタント応答の横にカルーセルを描画できるようにします。
+このサーバーは公式 Model Context Protocol (MCP) TypeScript SDK を利用して `cat-carousel` ツールをまとめています。`neko-widget-dev/build-all.mts` スクリプトで生成されたインライン HTML スニペットを読み込み、Apps SDK がアシスタント応答の横にカルーセルを描画できるようにします。
 
 ## 前提条件
 
@@ -21,7 +21,7 @@ pnpm install
 pnpm start
 ```
 
-サーバーは `http://localhost:8000` で待ち受け、`/mcp` に SSE エンドポイントを公開します。起動前にリポジトリルートで `pnpm run build` を実行し、`assets/cat-carousel.snippet.html` を生成しておいてください。
+サーバーは `http://localhost:8000` で待ち受け、`/mcp` に SSE エンドポイントを公開します。起動前に `neko-widget-dev` ディレクトリで `pnpm run build` を実行し、`neko-widget-dev/assets/cat-carousel.snippet.html` を生成しておいてください。
 
 ## ツールの動作
 
