@@ -167,6 +167,17 @@ function App() {
           />
         </button>
       )}
+      <div className="mt-6 px-6 text-center text-xs text-black/50">
+        写真の出典:{" "}
+        <a
+          href="https://thecatapi.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-black/70"
+        >
+          The Cat API
+        </a>
+      </div>
     </div>
   );
 }

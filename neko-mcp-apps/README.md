@@ -33,6 +33,10 @@ pnpm run build
 `assets/` ディレクトリに `cat-carousel.css`、`cat-carousel.js`、`cat-carousel.snippet.html` が生成されます。  
 MCP サーバーはこのスニペットを直接読み込むため、静的サーバーは必須ではありません。
 
+## CatAPI について
+
+カルーセルと `cat-interrupt` ツールはいずれも The Cat API から取得した猫画像を利用しています。必要に応じて https://thecatapi.com/ を参照してください。
+
 ## ローカル開発
 
 ホットリロードでカルーセルウィジェットを編集する場合は以下を実行します。
@@ -53,9 +57,3 @@ pnpm start
 ```
 
 サーバーは単一のツール (`cat-carousel`) を公開し、ビルド済みスニペットを返します。起動前に必ずビルドを済ませてください。
-
-## 次の一歩
-
-- `src/cat-carousel/index.jsx` を編集して UI や取得件数を調整する。
-- `neko-mcp-server-node/src/server.ts` を改造してツールやメタデータを拡張する。
-- 新しいウィジェットを追加したい場合は `src/` 以下にエントリを増やし、`build-all.mts` の `TARGET_ENTRIES` を更新する。
