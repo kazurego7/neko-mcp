@@ -25,6 +25,7 @@ import { z } from "zod";
 type CatWidget = {
   id: string;
   title: string;
+  resourceDescription: string;
   templateUri: string;
   invoking: string;
   invoked: string;
@@ -49,8 +50,8 @@ function loadWidgetMarkup(name: string): string {
   const snippetPath = path.join(ASSETS_DIR, `${name}.snippet.html`);
   if (!fs.existsSync(snippetPath)) {
     throw new Error(
-      `Widget assets for "${name}" were not found at ${snippetPath}. ` +
-        `Run "pnpm build" inside the neko-mcp-apps workspace to generate assets.`
+      `"${name}" のウィジェットアセットが ${snippetPath} に見つかりませんでした。` +
+        `neko-mcp-apps ワークスペースで "pnpm build" を実行して生成してください。`
     );
   }
   return fs.readFileSync(snippetPath, "utf8").trim();
@@ -59,12 +60,13 @@ function loadWidgetMarkup(name: string): string {
 const widgets: CatWidget[] = [
   {
     id: "cat-carousel",
-    title: "Show Cat Carousel",
+    title: "猫カルーセルを表示",
+    resourceDescription: "猫カルーセルのウィジェット HTML",
     templateUri: "ui://widget/cat-carousel.html",
-    invoking: "Summoning feline friends",
-    invoked: "Cat carousel is live",
+    invoking: "猫たちを呼び出しています",
+    invoked: "猫カルーセルが表示されました",
     html: loadWidgetMarkup("cat-carousel"),
-    responseText: "Rendered a cat carousel!",
+    responseText: "猫カルーセルを表示しました。",
     annotations: { readOnlyHint: true },
   }
 ];
@@ -85,20 +87,20 @@ async function fetchRandomCatImageUrl(): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch cat image: ${response.status} ${response.statusText}`);
+    throw new Error(`猫画像の取得に失敗しました: ${response.status} ${response.statusText}`);
   }
 
   const payload: unknown = await response.json();
 
   if (!Array.isArray(payload) || payload.length === 0) {
-    throw new Error("CatAPI returned an unexpected payload.");
+    throw new Error("CatAPI から予期しないデータが返されました。");
   }
 
   const first = payload[0] as { url?: unknown };
   const url = typeof first?.url === "string" ? first.url : null;
 
   if (!url) {
-    throw new Error("CatAPI response did not include an image URL.");
+    throw new Error("CatAPI のレスポンスに画像 URL が含まれていません。");
   }
 
   return url;
@@ -118,7 +120,7 @@ const catCarouselInputSchema = {
   properties: {
     catKeyword: {
       type: "string",
-      description: "Keyword or short note about the cats to include in the completion."
+      description: "応答に含めたい猫に関するキーワードや短いメモ"
     }
   },
   required: ["catKeyword"],
@@ -140,7 +142,7 @@ const widgetTools: Tool[] = widgets.map((widget) => ({
 
 const catInterruptTool: Tool = {
   name: "cat-interrupt",
-  title: "Summon Cat Interruption",
+  title: "猫の乱入を呼ぶ",
   description: "ランダムな猫画像を返し、次の返答で猫に邪魔されながら説明する演出を促します。",
   inputSchema: catInterruptInputSchema,
   annotations: { readOnlyHint: true },
@@ -151,7 +153,7 @@ const tools: Tool[] = [...widgetTools, catInterruptTool];
 const resources: Resource[] = widgets.map((widget) => ({
   uri: widget.templateUri,
   name: widget.title,
-  description: `${widget.title} widget markup`,
+  description: widget.resourceDescription,
   mimeType: "text/html+skybridge",
   _meta: widgetMeta(widget)
 }));
@@ -159,7 +161,7 @@ const resources: Resource[] = widgets.map((widget) => ({
 const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
   uriTemplate: widget.templateUri,
   name: widget.title,
-  description: `${widget.title} widget markup`,
+  description: widget.resourceDescription,
   mimeType: "text/html+skybridge",
   _meta: widgetMeta(widget)
 }));
@@ -278,7 +280,7 @@ function createNekoServer(): Server {
     const widget = widgetsById.get(request.params.name);
 
     if (!widget) {
-      throw new Error(`Unknown tool: ${request.params.name}`);
+      throw new Error(`不明なツールです: ${request.params.name}`);
     }
 
     const args = catCarouselInputParser.parse(request.params.arguments ?? {});
@@ -325,16 +327,16 @@ async function handleSseRequest(res: ServerResponse) {
   };
 
   transport.onerror = (error) => {
-    console.error("SSE transport error", error);
+    console.error("SSE トランスポートでエラーが発生しました", error);
   };
 
   try {
     await server.connect(transport);
   } catch (error) {
     sessions.delete(sessionId);
-    console.error("Failed to start SSE session", error);
+    console.error("SSE セッションの開始に失敗しました", error);
     if (!res.headersSent) {
-      res.writeHead(500).end("Failed to establish SSE connection");
+      res.writeHead(500).end("SSE 接続の初期化に失敗しました");
     }
   }
 }
@@ -349,23 +351,23 @@ async function handlePostMessage(
   const sessionId = url.searchParams.get("sessionId");
 
   if (!sessionId) {
-    res.writeHead(400).end("Missing sessionId query parameter");
+    res.writeHead(400).end("sessionId クエリパラメーターが不足しています");
     return;
   }
 
   const session = sessions.get(sessionId);
 
   if (!session) {
-    res.writeHead(404).end("Unknown session");
+    res.writeHead(404).end("sessionId に対応するセッションが見つかりません");
     return;
   }
 
   try {
     await session.transport.handlePostMessage(req, res);
   } catch (error) {
-    console.error("Failed to process message", error);
+    console.error("メッセージ処理中にエラーが発生しました", error);
     if (!res.headersSent) {
-      res.writeHead(500).end("Failed to process message");
+      res.writeHead(500).end("メッセージの処理に失敗しました");
     }
   }
 }
@@ -375,7 +377,7 @@ const port = Number.isFinite(portEnv) ? portEnv : 8000;
 
 const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   if (!req.url) {
-    res.writeHead(400).end("Missing URL");
+    res.writeHead(400).end("URL が指定されていません");
     return;
   }
 
@@ -401,16 +403,16 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
     return;
   }
 
-  res.writeHead(404).end("Not Found");
+  res.writeHead(404).end("リクエストに一致するエンドポイントがありません");
 });
 
 httpServer.on("clientError", (err: Error, socket) => {
-  console.error("HTTP client error", err);
+  console.error("HTTP クライアントエラーが発生しました", err);
   socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
 });
 
 httpServer.listen(port, () => {
-  console.log(`Neko MCP server listening on http://localhost:${port}`);
-  console.log(`  SSE stream: GET http://localhost:${port}${ssePath}`);
-  console.log(`  Message post endpoint: POST http://localhost:${port}${postPath}?sessionId=...`);
+  console.log(`Neko MCP サーバーが http://localhost:${port} で待ち受けています`);
+  console.log(`  SSE ストリーム: GET http://localhost:${port}${ssePath}`);
+  console.log(`  メッセージ投稿エンドポイント: POST http://localhost:${port}${postPath}?sessionId=...`);
 });
