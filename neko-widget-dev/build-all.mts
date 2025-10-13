@@ -12,6 +12,9 @@ const OUT_DIR = "assets";
 const PER_ENTRY_CSS_GLOB = "**/*.{css,pcss,scss,sass}";
 const PER_ENTRY_CSS_IGNORE = ["**/*.module.*"];
 const GLOBAL_CSS_LIST = [path.resolve("src/index.css")];
+const SERVER_SNIPPET_TARGETS: Record<string, string> = {
+  "cat-carousel": path.resolve("../neko-mcp-server/src/catCarouselSnippet.ts"),
+};
 
 function wrapEntryPlugin(virtualId: string, entryFile: string, cssPaths: string[]): Plugin {
   return {
@@ -37,6 +40,20 @@ import ${JSON.stringify(entryFile)};
 function ensureOutDir() {
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(OUT_DIR, { recursive: true });
+}
+
+function emitServerSnippet(entryName: string, snippet: string) {
+  const target = SERVER_SNIPPET_TARGETS[entryName];
+  if (!target) return;
+
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  const banner = [
+    "// このファイルは neko-widget-dev/build-all.mts によって自動生成されました。",
+    "// 手動で編集しないでください。",
+    "",
+  ].join("\n");
+  const source = `${banner}export const catCarouselHtml = ${JSON.stringify(snippet)};\n`;
+  fs.writeFileSync(target, source, "utf8");
 }
 
 async function buildEntry(entryPath: string) {
@@ -116,6 +133,7 @@ async function buildEntry(entryPath: string) {
 
   const snippet = `${snippetParts.join("\n")}\n`;
   fs.writeFileSync(path.join(OUT_DIR, `${entryName}.snippet.html`), snippet, "utf8");
+  emitServerSnippet(entryName, snippet);
 
   const documentHtml = [
     "<!doctype html>",
