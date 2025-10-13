@@ -1,13 +1,14 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import useEmblaCarousel from "embla-carousel-react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 import CatCard from "./CatCard";
 
 function App() {
   const [cats, setCats] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
+  const [reloadToken, setReloadToken] = React.useState(0);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: false,
@@ -59,7 +60,7 @@ function App() {
     loadCats();
 
     return () => controller.abort();
-  }, []);
+  }, [reloadToken]);
 
   React.useEffect(() => {
     if (!emblaApi) return;
@@ -88,6 +89,9 @@ function App() {
   }, [emblaApi, cats.length]);
 
   const hasSlides = cats.length > 0;
+  const handleReload = React.useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   return (
     <div className="antialiased relative w-full text-black py-5 bg-white">
@@ -167,6 +171,17 @@ function App() {
           />
         </button>
       )}
+      <div className="mt-4 flex justify-center px-6">
+        <button
+          type="button"
+          onClick={handleReload}
+          disabled={isLoading}
+          className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black shadow-sm transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RotateCcw strokeWidth={1.5} className="h-4 w-4" aria-hidden="true" />
+          <span>{isLoading ? "読み込み中…" : "もう一度読み込む"}</span>
+        </button>
+      </div>
       <div className="mt-6 px-6 text-center text-xs text-black/50">
         写真の出典:{" "}
         <a
