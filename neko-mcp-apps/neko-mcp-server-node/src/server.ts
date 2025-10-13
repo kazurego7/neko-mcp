@@ -30,6 +30,7 @@ type CatWidget = {
   invoked: string;
   html: string;
   responseText: string;
+  annotations: { readOnlyHint: boolean };
 };
 
 function widgetMeta(widget: CatWidget) {
@@ -63,7 +64,8 @@ const widgets: CatWidget[] = [
     invoking: "Summoning feline friends",
     invoked: "Cat carousel is live",
     html: loadWidgetMarkup("cat-carousel"),
-    responseText: "Rendered a cat carousel!"
+    responseText: "Rendered a cat carousel!",
+    annotations: { readOnlyHint: true },
   }
 ];
 
@@ -75,128 +77,41 @@ widgets.forEach((widget) => {
   widgetsByUri.set(widget.templateUri, widget);
 });
 
-type CatScenarioTemplate = {
-  id: string;
-  title: string;
-  eventType: "cross" | "punch" | "sit";
-  tone: "gentle" | "chaotic" | "clingy";
-  description(topic: string): string;
-  beats(topic: string): Array<{
-    stage: "setup" | "interruption" | "recovery";
-    actor: "ai" | "cat";
-    text: string;
-  }>;
-  ascii: string;
-  suggestedImage: {
-    url: string;
-    alt: string;
-  };
-};
+async function fetchRandomCatImageUrl(): Promise<string> {
+  const response = await fetch("https://api.thecatapi.com/v1/images/search", {
+    headers: {
+      Accept: "application/json"
+    }
+  });
 
-const catScenarioTemplates: CatScenarioTemplate[] = [
-  {
-    id: "cross-and-restart",
-    title: "横切りで説明を遮る",
-    eventType: "cross",
-    tone: "gentle",
-    description: (topic) =>
-      `AIが「${topic}」について真面目に説明しているところへ猫が横切り、説明が一瞬止まって言い直しになるシーンです。`,
-    beats: (topic) => [
-      {
-        stage: "setup",
-        actor: "ai",
-        text: `「${topic}」について順番にご紹介しますね――`
-      },
-      {
-        stage: "interruption",
-        actor: "cat",
-        text: "すっと画面を横切り、鳴き声を残して去っていく。『にゃっ！』"
-      },
-      {
-        stage: "recovery",
-        actor: "ai",
-        text: "……い、いま見えましたか？ ええと、説明をもう一度整えますね。"
-      }
-    ],
-    ascii: ` ／＞　 フ
- | 　_　_|
-／\` ミ＿xノ   ﾄｺﾄｺ…
-/　　　　 |
-/　 ヽ＿ヽ _)_)`,
-    suggestedImage: {
-      url: "https://placekitten.com/480/270",
-      alt: "横切りざまにこちらを見る黒猫"
-    }
-  },
-  {
-    id: "under-text-punch",
-    title: "テキスト下から猫パンチ連打",
-    eventType: "punch",
-    tone: "chaotic",
-    description: (topic) =>
-      `AIが「${topic}」の要点を列挙している最中、表示テキストの下から猫パンチが飛び出して説明が中断されるシーンです。`,
-    beats: (topic) => [
-      {
-        stage: "setup",
-        actor: "ai",
-        text: `続いて「${topic}」で押さえておきたいポイントは──`
-      },
-      {
-        stage: "interruption",
-        actor: "cat",
-        text: "説明テキストの下端から肉球が飛び出す。『(=^･ｪ･^=)ﾉｼ ﾊﾟｼｯ!』"
-      },
-      {
-        stage: "recovery",
-        actor: "ai",
-        text: "いたっ、ちょっと待ってください、今重要なところなので……それでは改めて。"
-      }
-    ],
-    ascii: `──────────────
-説明テキスト領域
-──────────────
-   (=^･ｪ･^=)ﾉｼ ﾊﾟｼｯ!
-        ↑
-   猫パンチゾーン`,
-    suggestedImage: {
-      url: "https://placekitten.com/500/280",
-      alt: "画面の端から前足を伸ばす猫"
-    }
-  },
-  {
-    id: "sit-and-stare",
-    title: "見出しの上に居座る",
-    eventType: "sit",
-    tone: "clingy",
-    description: (topic) =>
-      `「${topic}」の章を見せようとした瞬間に、猫が見出しの上へ座り込んで視界を塞ぐシーンです。`,
-    beats: (topic) => [
-      {
-        stage: "setup",
-        actor: "ai",
-        text: `最後に「${topic}」でよく使われる手法をご紹介します。`
-      },
-      {
-        stage: "interruption",
-        actor: "cat",
-        text: "見出しの真上にちょこんと座り、こちらをじっと見つめる。『……ﾆｬ』"
-      },
-      {
-        stage: "recovery",
-        actor: "ai",
-        text: "そこに座られると文字が読めないんですが……少しだけ譲ってもらえますか？"
-      }
-    ],
-    ascii: `　 ∧＿∧　
-　( ΦωΦ )   ←ここに居座る
-　( つ旦O
-　と＿)_)`,
-    suggestedImage: {
-      url: "https://placekitten.com/460/280",
-      alt: "パソコンの前で居座る猫"
-    }
+  if (!response.ok) {
+    throw new Error(`Failed to fetch cat image: ${response.status} ${response.statusText}`);
   }
-];
+
+  const payload: unknown = await response.json();
+
+  if (!Array.isArray(payload) || payload.length === 0) {
+    throw new Error("CatAPI returned an unexpected payload.");
+  }
+
+  const first = payload[0] as { url?: unknown };
+  const url = typeof first?.url === "string" ? first.url : null;
+
+  if (!url) {
+    throw new Error("CatAPI response did not include an image URL.");
+  }
+
+  return url;
+}
+
+const catInterruptInputSchema = {
+  type: "object",
+  properties: {},
+  required: [],
+  additionalProperties: false
+} as const;
+
+const catInterruptInputParser = z.object({}).strict();
 
 const catCarouselInputSchema = {
   type: "object",
@@ -214,91 +129,24 @@ const catCarouselInputParser = z.object({
   catKeyword: z.string().min(1).max(60)
 });
 
-const catScenarioInputSchema = {
-  type: "object",
-  properties: {
-    topic: {
-      type: "string",
-      description: "説明が邪魔される内容やテーマ。例: アジャイル、家計簿アプリの使い方など。"
-    },
-    tone: {
-      type: "string",
-      enum: ["gentle", "chaotic", "clingy"],
-      description: "猫の乱入の雰囲気。柔らかめ(gentle)、ドタバタ(chaotic)、甘えん坊(clingy)。"
-    }
-  },
-  required: ["topic"],
-  additionalProperties: false
-} as const;
-
-const catScenarioInputParser = z.object({
-  topic: z.string().min(1).max(120),
-  tone: z.enum(["gentle", "chaotic", "clingy"]).optional()
-});
-
-type CatScenario = {
-  topic: string;
-  title: string;
-  eventType: CatScenarioTemplate["eventType"];
-  tone: CatScenarioTemplate["tone"];
-  description: string;
-  beats: ReturnType<CatScenarioTemplate["beats"]>;
-  ascii: string;
-  suggestedImage: CatScenarioTemplate["suggestedImage"];
-  notes: string[];
-};
-
-function pickScenarioTemplate(tone?: CatScenario["tone"]): CatScenarioTemplate {
-  const pool =
-    tone !== undefined
-      ? catScenarioTemplates.filter((template) => template.tone === tone)
-      : catScenarioTemplates;
-  if (pool.length === 0) {
-    return catScenarioTemplates[0];
-  }
-  const index = Math.floor(Math.random() * pool.length);
-  return pool[index] ?? catScenarioTemplates[0];
-}
-
-function createCatScenario(topic: string, tone?: CatScenario["tone"]): CatScenario {
-  const template = pickScenarioTemplate(tone);
-  const beats = template.beats(topic);
-
-  const notes: string[] = [
-    "このシナリオはUIではなくテキストベースでの演出を想定しています。",
-    "AIメッセージの途中に猫イベントを差し込み、再開時のセリフを用意するとスムーズです。"
-  ];
-
-  return {
-    topic,
-    title: template.title,
-    eventType: template.eventType,
-    tone: template.tone,
-    description: template.description(topic),
-    beats,
-    ascii: template.ascii,
-    suggestedImage: template.suggestedImage,
-    notes
-  };
-}
-
 const widgetTools: Tool[] = widgets.map((widget) => ({
   name: widget.id,
   description: widget.title,
   inputSchema: catCarouselInputSchema,
   title: widget.title,
-  _meta: widgetMeta(widget)
+  _meta: widgetMeta(widget),
+  annotations: widget.annotations,
 }));
 
-const catScenarioTool: Tool = {
+const catInterruptTool: Tool = {
   name: "cat-interrupt",
-  title: "Generate Cat Mischief Scenario",
-  description:
-    "指定したトピックの説明が猫に邪魔されるミニシナリオと、参考画像URL・スクリプト例を生成します。",
-  inputSchema: catScenarioInputSchema
+  title: "Summon Cat Interruption",
+  description: "ランダムな猫画像を返し、次の返答で猫に邪魔されながら説明する演出を促します。",
+  inputSchema: catInterruptInputSchema,
+  annotations: { readOnlyHint: true },
 };
 
-const tools: Tool[] = [...widgetTools, catScenarioTool];
+const tools: Tool[] = [...widgetTools, catInterruptTool];
 
 const resources: Resource[] = widgets.map((widget) => ({
   uri: widget.templateUri,
@@ -362,14 +210,20 @@ function createNekoServer(): Server {
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
-    if (request.params.name === catScenarioTool.name) {
-      const args = catScenarioInputParser.parse(request.params.arguments ?? {});
-      const scenario = createCatScenario(args.topic, args.tone);
+    if (request.params.name === catInterruptTool.name) {
+      catInterruptInputParser.parse(request.params.arguments ?? {});
+
+      const imageUrl = await fetchRandomCatImageUrl();
+
+      const instruction = [
+        "次の返答では、まずユーザーにこの猫画像を見せてください。",
+        "そのうえで、この猫が画面を横切ったりちょっかいを出したりして解説を邪魔してくる体で説明を続けてください。",
+        "返答が終わったら通常モードに戻って構いません。"
+      ].join("\n");
 
       const summary = [
-        `猫乱入シーン: ${scenario.title}`,
-        `状況: ${scenario.description}`,
-        `推奨画像URL: ${scenario.suggestedImage.url}`
+        `猫画像: ${imageUrl}`,
+        "次の返答の冒頭で画像を共有し、その流れで猫乱入演出をしてください。"
       ].join("\n");
 
       return {
@@ -380,16 +234,9 @@ function createNekoServer(): Server {
           }
         ],
         structuredContent: {
-          catScenario: {
-            topic: scenario.topic,
-            title: scenario.title,
-            eventType: scenario.eventType,
-            tone: scenario.tone,
-            description: scenario.description,
-            beats: scenario.beats,
-            ascii: scenario.ascii,
-            suggestedImage: scenario.suggestedImage,
-            notes: scenario.notes
+          catInterrupt: {
+            imageUrl,
+            instruction
           }
         }
       };
@@ -413,6 +260,7 @@ function createNekoServer(): Server {
       structuredContent: {
         catKeyword: args.catKeyword
       },
+      
       _meta: widgetMeta(widget)
     };
   });
