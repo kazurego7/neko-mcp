@@ -26,8 +26,7 @@ pnpm start
 ## ツールの動作
 
 - **cat-carousel**  
-  - 入力オブジェクトは `catKeyword` という文字列フィールドを 1 つだけ必須とします。  
-  - プレーンテキストを返し、`structuredContent` にキーワードを反映し、`_meta.openai/outputTemplate` で `ui://widget/cat-carousel.html` を指します。
+  - 入力は不要で、プレーンテキストを返し、`_meta.openai/outputTemplate` で `ui://widget/cat-carousel.html` を指します。
   - ビルドステップで生成されたカルーセル HTML を応答に埋め込みます。
 
 追加のウィジェットバンドルを生成したら `src/server.ts` を編集し、ツールやデータ連携を拡張してください。

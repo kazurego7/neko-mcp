@@ -117,19 +117,12 @@ const catInterruptInputParser = z.object({}).strict();
 
 const catCarouselInputSchema = {
   type: "object",
-  properties: {
-    catKeyword: {
-      type: "string",
-      description: "応答に含めたい猫に関するキーワードや短いメモ"
-    }
-  },
-  required: ["catKeyword"],
+  properties: {},
+  required: [],
   additionalProperties: false
 } as const;
 
-const catCarouselInputParser = z.object({
-  catKeyword: z.string().min(1).max(60)
-});
+const catCarouselInputParser = z.object({}).strict();
 
 const widgetTools: Tool[] = widgets.map((widget) => ({
   name: widget.id,
@@ -283,7 +276,7 @@ function createNekoServer(): Server {
       throw new Error(`不明なツールです: ${request.params.name}`);
     }
 
-    const args = catCarouselInputParser.parse(request.params.arguments ?? {});
+    catCarouselInputParser.parse(request.params.arguments ?? {});
 
     return {
       content: [
@@ -292,10 +285,6 @@ function createNekoServer(): Server {
           text: widget.responseText
         }
       ],
-      structuredContent: {
-        catKeyword: args.catKeyword
-      },
-      
       _meta: widgetMeta(widget)
     };
   });
