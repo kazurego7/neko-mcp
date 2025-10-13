@@ -36,19 +36,10 @@ function App() {
 
         const payload = await response.json();
         const normalizedCats = payload
-          .map((entry) => {
-            const breed = entry?.breeds?.[0] ?? {};
-            return {
-              id: entry?.id ?? entry?.url,
-              name: breed?.name ?? "名前不明の猫",
-              origin: breed?.origin ?? "",
-              temperament: breed?.temperament ?? "",
-              description: breed?.description ?? "",
-              lifeSpan: breed?.life_span ?? "",
-              wikipediaUrl: breed?.wikipedia_url ?? "",
-              imageUrl: entry?.url ?? "",
-            };
-          })
+          .map((entry) => ({
+            id: entry?.id ?? entry?.url,
+            imageUrl: entry?.url ?? "",
+          }))
           .filter((cat) => cat.id && cat.imageUrl);
 
         setCats(normalizedCats);
