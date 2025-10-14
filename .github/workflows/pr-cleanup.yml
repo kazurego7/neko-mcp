@@ -1,0 +1,74 @@
+name: PR Cleanup
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  delete-preview-worker:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.event.pull_request.state == 'closed'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: neko-mcp-server/pnpm-lock.yaml
+
+      - name: Install dependencies (neko-mcp-server)
+        run: pnpm install --frozen-lockfile
+        working-directory: neko-mcp-server
+
+      - name: Determine Worker name
+        id: worker_name
+        run: |
+          echo "name=neko-mcp-preview-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Delete preview Worker
+        run: |
+          set +e
+          pnpm exec wrangler delete --env preview --name "${WORKER_NAME}" --force
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "wrangler delete exited with status $status. Assuming preview worker already removed."
+          fi
+          exit 0
+        working-directory: neko-mcp-server
+        env:
+          WORKER_NAME: ${{ steps.worker_name.outputs.name }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Remove preview URL comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const marker = "<!-- preview-url-comment -->";
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body.includes(marker));
+            if (!existing) {
+              core.info("Preview comment not found; nothing to remove.");
+              return;
+            }
+            await github.rest.issues.deleteComment({
+              owner,
+              repo,
+              comment_id: existing.id,
+            });

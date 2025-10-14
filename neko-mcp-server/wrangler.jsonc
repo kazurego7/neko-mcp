@@ -32,6 +32,23 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"env": {
+		"preview": {
+			/**
+			 * PR ごとにユニークな Worker 名を付けたい場合は wrangler コマンド引数で上書きしてください。
+			 */
+			"name": "neko-mcp-preview",
+			"vars": {
+				"DEPLOY_ENV": "preview"
+			}
+		},
+		"production": {
+			"name": "neko-mcp",
+			"vars": {
+				"DEPLOY_ENV": "production"
+			}
+		}
 	}
 	/**
 	 * Smart Placement

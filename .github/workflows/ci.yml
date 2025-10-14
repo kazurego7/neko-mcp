@@ -1,0 +1,179 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "neko-mcp-server/**"
+      - "neko-widget-dev/**"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: |
+            neko-mcp-server/pnpm-lock.yaml
+            neko-widget-dev/pnpm-lock.yaml
+
+      - name: Install dependencies (neko-widget-dev)
+        run: pnpm install --frozen-lockfile
+        working-directory: neko-widget-dev
+
+      - name: Install dependencies (neko-mcp-server)
+        run: pnpm install --frozen-lockfile
+        working-directory: neko-mcp-server
+
+      - name: Build cat widgets
+        run: pnpm run build
+        working-directory: neko-widget-dev
+
+      - name: Type check (neko-mcp-server)
+        run: pnpm run type-check
+        working-directory: neko-mcp-server
+
+      - name: Lint (neko-mcp-server)
+        run: pnpm exec biome lint --no-errors-on-unmatched --reporter github
+        working-directory: neko-mcp-server
+
+      - name: Ensure generated files are committed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Generated files are out of date. Run 'pnpm run build' inside neko-widget-dev and commit the changes."
+            git status --short
+            exit 1
+          fi
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: |
+            neko-mcp-server/pnpm-lock.yaml
+            neko-widget-dev/pnpm-lock.yaml
+
+      - name: Determine Worker name
+        id: worker_name
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "name=neko-mcp-preview-pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=neko-mcp" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies (neko-widget-dev)
+        run: pnpm install --frozen-lockfile
+        working-directory: neko-widget-dev
+
+      - name: Install dependencies (neko-mcp-server)
+        run: pnpm install --frozen-lockfile
+        working-directory: neko-mcp-server
+
+      - name: Build cat widgets
+        run: pnpm run build
+        working-directory: neko-widget-dev
+
+      - name: Deploy to Cloudflare Workers
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            pnpm exec wrangler deploy --env preview --name "${WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
+          else
+            pnpm exec wrangler deploy --env production --name "${WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
+          fi
+        working-directory: neko-mcp-server
+        env:
+          WORKER_NAME: ${{ steps.worker_name.outputs.name }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          THE_CAT_API_KEY: ${{ secrets.THE_CAT_API_KEY }}
+
+      - name: Fetch deployment URL
+        id: deployment_url
+        if: github.event_name == 'pull_request'
+        run: |
+          set -o pipefail
+          url=$(pnpm exec wrangler deployments list --env preview --name "${WORKER_NAME}" --json | jq -r 'sort_by(.created_on) | reverse | .[0].url // empty')
+          if [ -n "$url" ]; then
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=" >> "$GITHUB_OUTPUT"
+          fi
+        working-directory: neko-mcp-server
+        env:
+          WORKER_NAME: ${{ steps.worker_name.outputs.name }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request' && steps.deployment_url.outputs.url != ''
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deployment_url.outputs.url }}
+          GIT_SHA: ${{ github.sha }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const marker = "<!-- preview-url-comment -->";
+            const url = process.env.PREVIEW_URL;
+            const sha = process.env.GIT_SHA;
+            if (!url) {
+              core.warning("Preview URL is empty; skipping comment update.");
+              return;
+            }
+            const body = `${marker}\n🐾 プレビュー環境: ${url}\nコミット: \`${sha}\``;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
