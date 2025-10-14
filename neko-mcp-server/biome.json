@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
 	"assist": {
 		"actions": {
 			"source": {
@@ -9,7 +9,7 @@
 		"enabled": true
 	},
 	"files": {
-		"includes": ["!worker-configuration.d.ts", "src/**/*"]
+		"includes": ["src/**/*.{ts,tsx,cts,mts,js,jsx}"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -40,6 +40,17 @@
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["worker-configuration.d.ts", "src/catCarouselSnippet.ts", ".wrangler/**/*"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			}
+		}
+	],
 	"root": false,
 	"vcs": {
 		"clientKind": "git",
