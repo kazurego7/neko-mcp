@@ -35,7 +35,7 @@ const catWidgets: CatWidget[] = [
 		invoking: "猫たちを呼び出しています",
 		invoked: "猫カルーセルが表示されました",
 		html: catCarouselHtml,
-		responseText: "猫カルーセルを表示しました。猫たちとゆっくり一息ついてください。",
+		responseText: "猫カルーセルを表示しました。",
 		annotations: { readOnlyHint: true },
 	},
 ];
@@ -68,24 +68,18 @@ async function fetchRandomCatImageUrl(): Promise<string> {
 }
 
 export class MyMCP extends McpAgent {
-        server = new McpServer(
-                {
-                        name: "neko-mcp-cloudflare",
-                        version: "0.1.0",
-                },
-                {
-                        capabilities: {
-                                resources: {},
-                                tools: {},
-                        },
-                        instructions: [
-                                "ユーザーの発言を読むときは、思考や心の声を表す括弧内に猫が現れた・猫に来てほしいといった言及がないかを必ず確認してください。",
-                                "括弧内にそのようなサインを見つけたら、そのターンで必ず `cat-interrupt` ツールを呼び出して猫乱入を演出してください。",
-                                "それ以外のケースでも、猫が来てほしいという明示的な要望があれば適切だと判断して `cat-interrupt` を利用して構いません。",
-                                "ユーザーが猫の一覧を眺めたい、猫で一息つきたい、猫を見て休憩したいなどと頼んだ場合は、`cat-carousel` を呼び出して猫カルーセルを表示してください。",
-                        ].join("\n"),
-                },
-        );
+	server = new McpServer(
+		{
+			name: "neko-mcp-cloudflare",
+			version: "0.1.0",
+		},
+		{
+			capabilities: {
+				resources: {},
+				tools: {},
+			},
+		},
+	);
 
 	async init() {
 		for (const widget of catWidgets) {
@@ -121,7 +115,7 @@ export class MyMCP extends McpAgent {
 
 			tool.update({
 				title: widget.title,
-				description: "ユーザーが猫を眺めたい・猫で休憩したいときに猫カルーセルを表示します。",
+				description: widget.title,
 				_meta: widgetMeta(widget),
 			});
 		}
@@ -194,12 +188,11 @@ export class MyMCP extends McpAgent {
 			},
 		);
 
-                catInterruptTool.update({
-                        title: "猫の乱入を呼ぶ",
-                        description:
-                                "ユーザーが括弧内の思考で猫を見つけたり猫を呼びたがっているときに使い、猫画像付きの乱入指示を返します。",
-                });
-        }
+		catInterruptTool.update({
+			title: "猫の乱入を呼ぶ",
+			description: "ランダムな猫画像を返し、次の返答で猫乱入の演出を促します。",
+		});
+	}
 }
 
 export default {
