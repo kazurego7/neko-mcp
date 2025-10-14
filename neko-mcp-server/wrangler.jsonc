@@ -31,24 +31,40 @@
 		]
 	},
 	"observability": {
-		"enabled": true
-	},
+ 		"enabled": true
+ 	},
 	"env": {
-		"preview": {
+ 		"preview": {
 			/**
 			 * PR ごとにユニークな Worker 名を付けたい場合は wrangler コマンド引数で上書きしてください。
-			 */
-			"name": "neko-mcp-preview",
-			"vars": {
-				"DEPLOY_ENV": "preview"
-			}
+ 		 */
+ 		"name": "neko-mcp-preview",
+		"durable_objects": {
+			"bindings": [
+				{
+					"class_name": "MyMCP",
+					"name": "MCP_OBJECT"
+				}
+			]
 		},
-		"production": {
-			"name": "neko-mcp",
-			"vars": {
-				"DEPLOY_ENV": "production"
-			}
-		}
+		"vars": {
+			"DEPLOY_ENV": "preview"
+ 		}
+ 	},
+ 	"production": {
+ 		"name": "neko-mcp",
+		"durable_objects": {
+			"bindings": [
+				{
+					"class_name": "MyMCP",
+					"name": "MCP_OBJECT"
+				}
+			]
+		},
+ 		"vars": {
+ 			"DEPLOY_ENV": "production"
+ 		}
+ 	}
 	}
 	/**
 	 * Smart Placement
