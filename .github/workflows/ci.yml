@@ -84,15 +84,6 @@ jobs:
             neko-mcp-server/pnpm-lock.yaml
             neko-widget-dev/pnpm-lock.yaml
 
-      - name: Determine Worker name
-        id: worker_name
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "name=neko-mcp-preview-pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=neko-mcp" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Install dependencies (neko-widget-dev)
         run: pnpm install --frozen-lockfile
         working-directory: neko-widget-dev
@@ -108,13 +99,14 @@ jobs:
       - name: Deploy to Cloudflare Workers
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            pnpm exec wrangler deploy --env preview --name "${WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
+            pnpm exec wrangler deploy --env preview --name "${PREVIEW_WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
           else
-            pnpm exec wrangler deploy --env production --name "${WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
+            pnpm exec wrangler deploy --env production --name "${PRODUCTION_WORKER_NAME}" --var GIT_SHA:${{ github.sha }}
           fi
         working-directory: neko-mcp-server
         env:
-          WORKER_NAME: ${{ steps.worker_name.outputs.name }}
+          PREVIEW_WORKER_NAME: neko-mcp-preview
+          PRODUCTION_WORKER_NAME: neko-mcp
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           THE_CAT_API_KEY: ${{ secrets.THE_CAT_API_KEY }}
@@ -124,7 +116,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           set -o pipefail
-          url=$(pnpm exec wrangler deployments list --env preview --name "${WORKER_NAME}" --json | jq -r 'sort_by(.created_on) | reverse | .[0].url // empty')
+          url=$(pnpm exec wrangler deployments list --env preview --name "${PREVIEW_WORKER_NAME}" --json | jq -r 'sort_by(.created_on) | reverse | .[0].url // empty')
           if [ -n "$url" ]; then
             echo "url=$url" >> "$GITHUB_OUTPUT"
           else
@@ -132,7 +124,7 @@ jobs:
           fi
         working-directory: neko-mcp-server
         env:
-          WORKER_NAME: ${{ steps.worker_name.outputs.name }}
+          PREVIEW_WORKER_NAME: neko-mcp-preview
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
