@@ -1,5 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+	"root": true,
 	"assist": {
 		"actions": {
 			"source": {
@@ -9,7 +10,12 @@
 		"enabled": true
 	},
 	"files": {
-		"includes": ["src/**/*.{ts,tsx,cts,mts,js,jsx}"]
+		"includes": [
+			"src/**/*.{ts,tsx,cts,mts,js,jsx}",
+			"!.wrangler",
+			"!worker-configuration.d.ts",
+			"!**/*.d.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -36,13 +42,16 @@
 			"suspicious": {
 				"noConfusingVoidType": "off",
 				"noDebugger": "off",
-				"noExplicitAny": "off"
+				"noExplicitAny": "off",
+				"noTemplateCurlyInString": "off"
 			}
 		}
 	},
 	"overrides": [
 		{
-			"includes": ["worker-configuration.d.ts", "src/catCarouselSnippet.ts", ".wrangler/**/*"],
+			"includes": [
+				"src/catCarouselSnippet.ts"
+			],
 			"linter": {
 				"enabled": false
 			},
@@ -51,7 +60,6 @@
 			}
 		}
 	],
-	"root": false,
 	"vcs": {
 		"clientKind": "git",
 		"enabled": true,
