@@ -1,50 +1,63 @@
-# Building a Remote MCP Server on Cloudflare (Without Auth)
+# neko-mcp-server
 
-This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. 
+Cloudflare Workers 上で動作する Model Context Protocol (MCP) サーバーです。`neko-widget-dev/` がビルドした猫カルーセルを `cat-carousel` ツールとして返し、The Cat API の画像で「猫の乱入」を演出する `cat-interrupt` ツールも提供します。
 
-## Get started: 
+## 概要
+- Workers Runtime と `agents/mcp` を組み合わせたリモート MCP サーバー。
+- Durable Object `MyMCP` が SSE エンドポイント（`/sse`）と HTTP エンドポイント（`/mcp`）を配信。
+- neko-mcp プロジェクトの Apps SDK 体験に猫の UI を差し込むバックエンド役。
 
-[![Deploy to Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/ai/tree/main/demos/remote-mcp-authless)
+## 必要環境
+- Node.js 18 以上
+- pnpm
+- Cloudflare アカウントと Wrangler CLI（`pnpm dlx wrangler --version` で確認）
+- 任意: The Cat API の API キー（高頻度アクセス時）。`wrangler secret put THE_CAT_API_KEY` で登録できます。
 
-This will deploy your MCP server to a URL like: `remote-mcp-server-authless.<your-account>.workers.dev/sse`
+## セットアップ
+依存関係をインストールします。
 
-Alternatively, you can use the command line below to get the remote MCP Server created on your local machine:
 ```bash
-npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/remote-mcp-authless
+pnpm install
 ```
 
-## Customizing your MCP Server
+> `cat-carousel` ツールで使用する HTML は `../neko-widget-dev/` のビルド結果です。ウィジェットを更新したら `pnpm run build` を実行し、このサーバーを再起動してください。
 
-To add your own [tools](https://developers.cloudflare.com/agents/model-context-protocol/tools/) to the MCP server, define each tool inside the `init()` method of `src/index.ts` using `this.server.tool(...)`. 
+## ローカル開発
+- `pnpm start`（= `wrangler dev`）でローカル Worker を起動します。デフォルトでは `http://localhost:8787` が利用可能です。
+- MCP クライアントからは `http://localhost:8787/sse` を指定します。`mcp-remote` を使えば Claude Desktop や Apps SDK から接続できます。
+- `pnpm run type-check` や `pnpm run lint:fix` で型チェック／整形を実行できます。
 
-## Connect to Cloudflare AI Playground
+## 提供中のツールとリソース
+- `cat-carousel`  
+  - 返却内容: `assets/cat-carousel.snippet.html` をインライン化した HTML。  
+  - 役割: Apps SDK の `ui://widget/cat-carousel.html` として埋め込み表示。  
+  - 更新手順: `neko-widget-dev` 側でビルド → このサーバーを再起動。
+- `cat-interrupt`  
+  - 返却内容: ランダムな猫画像 URL と、次の回答で猫が割り込む演出を促すテキスト。  
+  - カスタマイズ: The Cat API のレスポンス利用。API キーを設定する場合は `fetch` のヘッダーに追加してください。
 
-You can connect to your MCP server from the Cloudflare AI Playground, which is a remote MCP client:
+## デプロイ
+1. `pnpm dlx wrangler login` で Cloudflare にログインします。
+2. `pnpm run deploy` を実行すると、`https://<your-account>.workers.dev/sse` のようなエンドポイントが発行されます。独自ドメインを使う場合は Cloudflare 側でルートを設定してください。
 
-1. Go to https://playground.ai.cloudflare.com/
-2. Enter your deployed MCP server URL (`remote-mcp-server-authless.<your-account>.workers.dev/sse`)
-3. You can now use your MCP tools directly from the playground!
-
-## Connect Claude Desktop to your MCP server
-
-You can also connect to your remote MCP server from local MCP clients, by using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote). 
-
-To connect to your MCP server from Claude Desktop, follow [Anthropic's Quickstart](https://modelcontextprotocol.io/quickstart/user) and within Claude Desktop go to Settings > Developer > Edit Config.
-
-Update with this configuration:
+## MCP クライアントからの接続例
+- **Cloudflare AI Playground**  
+  `https://playground.ai.cloudflare.com/` にアクセスし、`Server URL` に `/sse` エンドポイントを入力します。
+- **Claude Desktop**  
+  `Settings > Developer > Edit Config` を開き、以下のように `mcp-remote` 経由で登録します。
 
 ```json
 {
   "mcpServers": {
-    "calculator": {
+    "neko": {
       "command": "npx",
-      "args": [
-        "mcp-remote",
-        "http://localhost:8787/sse"  // or remote-mcp-server-authless.your-account.workers.dev/sse
-      ]
+      "args": ["mcp-remote", "http://localhost:8787/sse"]
     }
   }
 }
 ```
 
-Restart Claude and you should see the tools become available. 
+## カスタマイズのヒント
+- 追加ツールは `src/index.ts` の `MyMCP.init()` 内で `this.server.tool(...)` を呼び出して登録します。
+- 新しいウィジェットを追加する場合は `catWidgets` 配列にエントリを増やし、`../neko-widget-dev/` で対応するスニペット生成フローを用意すると管理しやすくなります。
+- Biome でのコード整形 (`pnpm run format`) や TypeScript の型検証 (`pnpm run type-check`) を CI フックに組み込むと安定した開発運用が可能です。
