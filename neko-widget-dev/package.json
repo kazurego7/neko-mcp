@@ -17,7 +17,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "@types/node": "^24.3.0",
-    "@vitejs/plugin-react": "^4.5.2e",
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "10.4.21",
     "fast-glob": "^3.3.3",
     "postcss": "8.5.6",
@@ -30,8 +30,8 @@
   "dependencies": {
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
-    "embla-carousel": "^8.0.0",
-    "embla-carousel-react": "^8.0.0",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.536.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
