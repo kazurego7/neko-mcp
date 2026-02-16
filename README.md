@@ -14,7 +14,7 @@ OpenAI Apps SDK と Model Context Protocol (MCP) を組み合わせて、「真�
 - `doc/` – プロジェクトの構想メモなど、補足ドキュメント。
 
 ## 必要条件
-- Node.js 18 以上
+- Node.js 20.19 以上（Vite 7 / Wrangler 4 の推奨要件）
 - pnpm
 - Cloudflare Workers 用の Wrangler（MCP サーバーをローカル起動・デプロイする場合）
 
