@@ -12,14 +12,14 @@ importers:
         specifier: ^1.20.0
         version: 1.20.0
       agents:
-        specifier: ^0.2.8
+        specifier: ^0.2.13
         version: 0.2.13(@cloudflare/workers-types@4.20251011.0)(react@19.2.0)(typescript@5.9.3)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.2.5
+        specifier: ^2.2.6
         version: 2.2.6
       '@types/node':
         specifier: ^24.7.2
