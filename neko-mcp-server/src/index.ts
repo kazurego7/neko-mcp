@@ -32,7 +32,7 @@ const catWidgets: CatWidget[] = [
 		id: "cat-carousel",
 		title: "猫カルーセルを表示",
 		description:
-			"猫の話題が出たとき、ユーザーが猫画像を見たそうなとき、または文中の（猫が気になる描写）を拾ったときに猫画像カルーセルを表示します。",
+			"ユーザーが猫/ねこ/cat/にゃんこに言及したとき、猫画像を見たい流れのとき、または文中の（猫が横切る等のカッコ描写）が出たときに猫画像カルーセルを表示します。",
 		resourceDescription: "猫カルーセルのウィジェット HTML",
 		templateUri: "ui://widget/cat-carousel.html",
 		invoking: "猫たちを呼び出しています",
@@ -194,7 +194,7 @@ export class MyMCP extends McpAgent {
 		catInterruptTool.update({
 			title: "猫の乱入を呼ぶ",
 			description:
-				"ユーザーが猫に言及したとき、会話中に（猫が横切る/視界に入る）などの描写が出たとき、説明の空気をやわらげたいときに、猫乱入演出付きの返答を生成します。",
+				"ユーザーが猫/ねこ/cat/にゃんこに触れたとき、会話中に（猫が横切る・視界に入る等）のカッコ描写が出たとき、または説明の空気をやわらげたいときに、猫乱入演出付きの返答を生成します。",
 		});
 	}
 }
